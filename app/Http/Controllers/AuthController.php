@@ -23,12 +23,12 @@ class AuthController extends Controller
             'email' => 'required|email|unique:users',
             'password' => 'required|string|min:6|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/'
         ]);
-    
+
         if ($validator->fails()) {
             Log::error('Validation failed', $validator->errors()->toArray());
             return response()->json($validator->errors(), 400);
         }
-    
+
         try {
             $user = User::create([
                 'firstname' => $request->firstname,
@@ -36,9 +36,9 @@ class AuthController extends Controller
                 'email' => $request->email,
                 'password' => bcrypt($request->password)
             ]);
-    
+
             Log::info('User created successfully', ['user' => $user->toArray()]);
-    
+
             return response()->json([
                 'status' => 'success', // 'status' => 'error
                 'code' => 201,
@@ -144,8 +144,8 @@ class AuthController extends Controller
         try {
             $image = $request->file('image');
             $imageName = str_replace(' ', '_', $image->getClientOriginalName());
-            $imagePath = $image->storeAs('products', $imageName);
-        
+            $imagePath = $image->storePubliclyAs('products', $imageName, 'public');
+
             $product = Product::create([
                 'name' => $request->name,
                 'userId' => auth::id(),
@@ -219,4 +219,51 @@ class AuthController extends Controller
         }
     }
 
+    //update product
+    public function update(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string',
+            'description' => 'required|string',
+            'price' => 'required|numeric',
+            'image' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
+        ]);
+
+        if ($validator->fails()) {
+            Log::error('Validation failed', $validator->errors()->toArray());
+            return response()->json($validator->errors(), 400);
+        }
+
+        try {
+            $product = Product::find($id);
+
+            if ($request->hasFile('image')) {
+                $image = $request->file('image');
+                $imageName = str_replace(' ', '_', $image->getClientOriginalName());
+                $imagePath = $image->storePubliclyAs('products', $imageName, 'public');
+                $product->image = $imageName;
+            }
+
+            $product->name = $request->name;
+            $product->description = $request->description;
+            $product->price = $request->price;
+            $product->save();
+
+            Log::info('Product updated successfully', ['product' => $product->toArray()]);
+            return response()->json([
+                'status' => 'success',
+                'code' => 200,
+                'message' => 'Product updated successfully',
+                'product' => $product
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Product update failed', ['error' => $e->getMessage()]);
+            return response()->json([
+                'status' => 'error',
+                'code' => 500,
+                'message' => 'Product update failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
