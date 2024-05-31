@@ -23,12 +23,12 @@ class AuthController extends Controller
             'email' => 'required|email|unique:users',
             'password' => 'required|string|min:6|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/'
         ]);
-
+    
         if ($validator->fails()) {
             Log::error('Validation failed', $validator->errors()->toArray());
             return response()->json($validator->errors(), 400);
         }
-
+    
         try {
             $user = User::create([
                 'firstname' => $request->firstname,
@@ -36,9 +36,9 @@ class AuthController extends Controller
                 'email' => $request->email,
                 'password' => bcrypt($request->password)
             ]);
-
+    
             Log::info('User created successfully', ['user' => $user->toArray()]);
-
+    
             return response()->json([
                 'status' => 'success', // 'status' => 'error
                 'code' => 201,
@@ -135,17 +135,17 @@ class AuthController extends Controller
             'price' => 'required|numeric',
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
         ]);
-
+    
         if ($validator->fails()) {
             Log::error('Validation failed', $validator->errors()->toArray());
             return response()->json($validator->errors(), 400);
         }
-
+    
         try {
             $image = $request->file('image');
             $imageName = str_replace(' ', '_', $image->getClientOriginalName());
             $imagePath = $image->storePubliclyAs('products', $imageName, 'public');
-
+        
             $product = Product::create([
                 'name' => $request->name,
                 'userId' => auth::id(),
@@ -153,7 +153,7 @@ class AuthController extends Controller
                 'price' => $request->price,
                 'image' => $imageName
             ]);
-
+    
             Log::info('Product created successfully', ['product' => $product->toArray()]);
             return response()->json([
                 'status' => 'success',
@@ -228,27 +228,27 @@ class AuthController extends Controller
             'price' => 'required|numeric',
             'image' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
         ]);
-
+    
         if ($validator->fails()) {
             Log::error('Validation failed', $validator->errors()->toArray());
             return response()->json($validator->errors(), 400);
         }
-
+    
         try {
             $product = Product::find($id);
-
+    
             if ($request->hasFile('image')) {
                 $image = $request->file('image');
                 $imageName = str_replace(' ', '_', $image->getClientOriginalName());
                 $imagePath = $image->storePubliclyAs('products', $imageName, 'public');
                 $product->image = $imageName;
             }
-
+    
             $product->name = $request->name;
             $product->description = $request->description;
             $product->price = $request->price;
             $product->save();
-
+    
             Log::info('Product updated successfully', ['product' => $product->toArray()]);
             return response()->json([
                 'status' => 'success',
@@ -266,4 +266,5 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
 }

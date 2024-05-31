@@ -13,8 +13,8 @@ Route::post('/logout', [AuthController::class, 'signOut']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/products', [AuthController::class, 'index']);
     Route::post('/create-product', [AuthController::class, 'createProduct']);
-    Route::get('/products/{id}', [AuthController::class, 'show']);
-    Route::put('/products/{id}', [AuthController::class, 'update']);
+    // Route::get('/products/{id}', [AuthController::class, 'show']);
+    Route::post('/products/{id}', [AuthController::class, 'update']);
     Route::delete('/products/{id}', [AuthController::class, 'destroy']);
 });
 /*
